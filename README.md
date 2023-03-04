@@ -1,5 +1,5 @@
-# CSA
+# AFRICA NEWS FOCUS TV WEBSITE 
 
-### Configurable Scheduling System
+### Content Management System
 
 #### Designs in progress...
