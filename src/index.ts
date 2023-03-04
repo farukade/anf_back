@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import allRoutes from './routers';
 import dbConnection from './models';
 import cors from 'cors';
+import { requsetLogger } from './middlewares/request.logger';
 config();
 
 export const app: Express = express();
@@ -22,6 +23,7 @@ app.use(
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(requsetLogger);
 
 app.use(allRoutes);
 

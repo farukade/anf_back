@@ -4,4 +4,6 @@ export interface IUser {
   password: string;
   userType: string;
   photo: string;
+  salt?: string;
+  isValidPassword?: Function;
 }

@@ -1,5 +1,7 @@
+import { pbkdf2Sync, randomBytes } from 'crypto';
 import { Request, Response } from 'express';
-import { User } from '../models/user.model';
+import { User, isValidPassword } from '../models/user.model';
+import { ILogin } from '../types/login.interface';
 import { IUser } from '../types/user.interface';
 import { constants } from './constants';
 const { handleError, handleBadRequest, handleSuccess } = constants;
@@ -27,22 +29,48 @@ const UserController = {
     try {
       const body: IUser = req.body;
 
-      const { email, username, ...restBody }: IUser = body;
-      if (!username || !email) return handleBadRequest(res, 400, "no username | email in req");
+      const { email, username, password, ...restBody }: IUser = body;
+      if (!username || !email || !password) return handleBadRequest(res, 400, "no username | email | password in parameters");
+
+      if (username?.length < 3 || password?.length < 5)
+        return handleBadRequest(res, 400, "username | password not of required length");
 
       const existing = await User.findOne({ email })
       if (existing) return handleBadRequest(res, 400, `${email} already registered`);
 
+      const salt = randomBytes(30).toString('hex');
+      const hash = pbkdf2Sync(password, salt, 1000, 64, `sha512`).toString(`hex`);
+
       const user = new User({
         email: email.toLowerCase(),
         username: username.toLowerCase(),
+        password: hash,
+        salt,
         ...restBody
       });
-      await user.save();
-      if (user) return handleSuccess(res, user, "user created", 201, null);
+      let savedData = await user.save();
+
+      if (savedData) {
+        return handleSuccess(res, savedData, "user created", 201, null)
+      };
       return handleBadRequest(res, 500, "unexpected error");
     } catch (error) {
-      handleError(res, error);
+      return handleError(res, error);
+    }
+  },
+  login: async (req: Request, res: Response) => {
+    try {
+      const { username, password }: ILogin = req.body;
+      if (!username || username?.length < 5 || !password || password?.length < 5)
+        return handleBadRequest(res, 400, "username | password not present or not of required length");
+
+      let rs = await isValidPassword(username.toLowerCase(), password);
+      if (rs.success) {
+        return handleSuccess(res, rs?.data, rs?.message, 200, null);
+      }
+      return handleBadRequest(res, 400, rs.message || "unexpected error");
+    } catch (error) {
+      return handleError(res, error);
     }
   }
 }
