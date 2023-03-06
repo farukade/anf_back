@@ -72,6 +72,31 @@ const UserController = {
     } catch (error) {
       return handleError(res, error);
     }
+  },
+  delete: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.query;
+      if (!id || !id.length) {
+        return handleBadRequest(res, 400, "no id in req params");
+      }
+      const result = await User.deleteOne({ _id: id });
+      if (result.deletedCount) return handleSuccess(res, undefined, result.deletedCount + " user(s) deleted", 200, undefined);
+      handleBadRequest(res, 400, "unexpected error, delete failed");
+    } catch (error) {
+      return handleError(res, error);
+    }
+  },
+  update: async (req: Request, res: Response) => {
+    try {
+      const { id, ...restData } = req.body;
+      if (!id || !restData) return handleBadRequest(res, 400, "req body incomplete");
+
+      const result = await User.updateOne({ _id: id }, restData);
+      if (result.modifiedCount) return handleSuccess(res, undefined, result.modifiedCount + " user(s) modified", 200, undefined);
+      handleBadRequest(res, 400, "unexpected error, modification failed");
+    } catch (error) {
+      handleError(res, error);
+    }
   }
 }
 

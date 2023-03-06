@@ -1,4 +1,11 @@
 import { Request, Response } from 'express';
+import { config } from 'dotenv';
+import * as jwtAuth from 'jsonwebtoken';
+import { constants } from '../controllers/constants';
+config()
+
+const secret = process.env.SECRET;
+const { handleBadRequest } = constants;
 
 export const requsetLogger = (req: Request, res: Response, next: Function) => {
   const { method, originalUrl: url, ip, protocol } = req;
@@ -43,4 +50,33 @@ export const logger = (color: string, message: any, bg = 'default') => {
     case 'default': backgroundColor = "\x1b[0m";
   }
   console.log(`${textColor || "\x1b[0m"} ${message} \x1b[0m`);
+}
+
+export const verify = (req: Request, res: Response, next: Function) => {
+  try {
+    if (req.headers["authorization"]) {
+      let token = req.headers["authorization"].split(" ")[1];
+
+      if (!token) return handleBadRequest(res, 403, "No authorization token");
+
+      jwtAuth.verify(token, secret ? secret : '', async (err, decode: any) => {
+        if (err) return handleBadRequest(res, 403, "forbidden access");
+
+        const payload = {
+          id: decode?.id,
+          username: decode?.username,
+          email: decode?.email,
+          userType: decode?.userType
+        }
+        req.headers.user = JSON.stringify(payload);
+
+        next();
+      });
+    } else {
+      return handleBadRequest(res, 403, "No authorization headers");
+    }
+  } catch (error) {
+    console.log(error || "verification error");
+    return handleBadRequest(res, 403, "Unexpected verification error");
+  }
 }

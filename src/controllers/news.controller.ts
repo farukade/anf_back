@@ -8,29 +8,38 @@ const NewsController = {
   get: async (req: Request, res: Response) => {
     try {
       const { id, categoryId, topStory, featured, editorsPick } = req.query;
+      const limit = req.query?.limit ? +req.query.limit : 10;
+      const page = req.query?.page ? +req.query.page : 1;
 
       if (id && id !== "") {
         const result = await News.findById(id);
         if (result) return handleSuccess(res, result, "content found", 200, null);
         return handleBadRequest(res, 400, "content not found");
       } else if (categoryId && categoryId !== "") {
-        const result = await News.find({ category: categoryId });
+        const result = await News.find({ category: categoryId }).limit(limit).skip(page - 1);
         if (result.length) return handleSuccess(res, result, "contents found", 200, null);
         return handleBadRequest(res, 400, "contents not found");
       } else if ((topStory && topStory !== "") || (featured && featured !== "") || (editorsPick && editorsPick !== "")) {
+        let query: any = {};
+
         const isTopStory = topStory === "1" ? true : undefined;
         const isFeatured = featured === "1" ? true : undefined;
         const isEditorsPick = editorsPick === "1" ? true : undefined;
-        console.log(isTopStory, isEditorsPick, isFeatured);
-        const result = await News.find({
-          isTopStory,
-          isFeatured,
-          isEditorsPick
-        });
+        if (isTopStory) {
+          query.isTopStory = true;
+        }
+        if (isEditorsPick) {
+          query.isEditorsPick = true;
+        }
+        if (isFeatured) {
+          query.isFeatured = true;
+        }
+
+        const result = await News.find(query).limit(limit).skip(page - 1);
         if (result.length) return handleSuccess(res, result, "contents found", 200, null);
         return handleBadRequest(res, 400, "contents not found");
       } else {
-        const result = await News.find();
+        const result = await News.find().limit(limit).skip(page - 1);
         if (result.length) return handleSuccess(res, result, "contents found", 200, null);
         return handleBadRequest(res, 400, "contents not found");
       }
@@ -61,6 +70,31 @@ const NewsController = {
       return handleError(res, error);
     }
   },
+  delete: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.query;
+      if (!id || !id.length) {
+        return handleBadRequest(res, 400, "no id in req params");
+      }
+      const result = await News.deleteOne({ _id: id });
+      if (result.deletedCount) return handleSuccess(res, undefined, result.deletedCount + " news deleted", 200, undefined);
+      handleBadRequest(res, 400, "unexpected error, delete failed");
+    } catch (error) {
+      return handleError(res, error);
+    }
+  },
+  update: async (req: Request, res: Response) => {
+    try {
+      const { id, ...restData } = req.body;
+      if (!id || !restData) return handleBadRequest(res, 400, "req body incomplete");
+
+      const result = await News.updateOne({ _id: id }, restData);
+      if (result.modifiedCount) return handleSuccess(res, undefined, result.modifiedCount + " news modified", 200, undefined);
+      handleBadRequest(res, 400, "unexpected error, modification failed");
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
 }
 
 export default NewsController;

@@ -31,9 +31,11 @@ const CategoryComtroller = {
       const body: ICategory = req.body;
       const { name, description, image }: ICategory = body;
 
+      if (!name) return handleBadRequest(res, 400, "name not in params");
+
       const schedule = new Category({
         name: name.toLowerCase(),
-        description: description?.toLowerCase(),
+        description: description?.toLowerCase() || name.toLowerCase(),
         image
       });
       await schedule.save();
@@ -44,6 +46,31 @@ const CategoryComtroller = {
       return handleError(res, error);
     }
   },
+  delete: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.query;
+      if (!id || !id.length) {
+        return handleBadRequest(res, 400, "no id in req params");
+      }
+      const result = await Category.deleteOne({ _id: id });
+      if (result.deletedCount) return handleSuccess(res, undefined, result.deletedCount + " category deleted", 200, undefined);
+      handleBadRequest(res, 400, "unexpected error, delete failed");
+    } catch (error) {
+      return handleError(res, error);
+    }
+  },
+  update: async (req: Request, res: Response) => {
+    try {
+      const { id, ...restData } = req.body;
+      if (!id || !restData) return handleBadRequest(res, 400, "req body incomplete");
+
+      const result = await Category.updateOne({ _id: id }, restData);
+      if (result.modifiedCount) return handleSuccess(res, undefined, result.modifiedCount + " category modified", 200, undefined);
+      handleBadRequest(res, 400, "unexpected error, modification failed");
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
 }
 
 export default CategoryComtroller;
