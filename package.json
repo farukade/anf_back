@@ -5,19 +5,38 @@
 	"license": "MIT",
 	"type": "commonjs",
 	"scripts": {
-		"build": "npx tsc",
+		"build": "tsc",
 		"start": "node dist/index.js",
-		"dev": "nodemon ./src/index.ts"
+		"start:prod": "yarn build && node dist/src/server.js",
+		"start:dev": "yarn build && nodemon ./src/server.ts",
+		"db:format": "yarn prisma format",
+		"db:migrate:new": "yarn prisma migrate dev --name",
+		"db:migrate:apply": "yarn prisma migrate dev",
+		"db:sync": "yarn prisma db push",
+		"db:seed": "yarn prisma db seed"
 	},
 	"dependencies": {
+		"@getvim/execute": "^1.0.0",
+		"@prisma/client": "^5.5.2",
 		"@types/cors": "^2.8.13",
 		"body-parser": "^1.20.1",
+		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
 		"dotenv": "^16.0.3",
 		"express": "^4.18.2",
+		"express-handlebars": "^7.1.2",
+		"express-jwt": "^8.4.1",
 		"jsonwebtoken": "^9.0.0",
+		"moment": "^2.29.4",
 		"mongoose": "^6.9.2",
-		"ts-node": "^10.9.1"
+		"multer": "^1.4.5-lts.1",
+		"numeral": "^2.0.6",
+		"prisma": "^5.5.2",
+		"puppeteer": "^21.5.1",
+		"socket.io": "^4.7.2",
+		"to-words": "^3.6.1",
+		"ts-node": "^10.9.1",
+		"winston": "^3.11.0"
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.17",
@@ -26,5 +45,9 @@
 		"concurrently": "^7.6.0",
 		"nodemon": "^2.0.20",
 		"typescript": "^4.9.5"
+	},
+	"prisma": {
+		"seed": "ts-node src/prisma/seed.ts",
+		"schema": "src/prisma/schema.prisma"
 	}
 }

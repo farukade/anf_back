@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model categories {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  description   String
+  image         String
+  status        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String   @default("admin")
+  lastChangedBy String?
+  news          news[]
+}
+
+model news {
+  id            Int        @id @default(autoincrement())
+  subject       String
+  category      categories @relation(fields: [categoryId], references: [id])
+  categoryId    Int
+  isTopStory    Boolean    @default(false)
+  isFeatured    Boolean    @default(false)
+  isEditorsPick Boolean    @default(false)
+  media         String?
+  content       String
+  status        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  createdBy     String     @default("admin")
+  lastChangedBy String?
+}
+
+model users {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  email         String   @unique
+  password      String
+  type          String   @default("regular")
+  salt          String
+  status        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String   @default("admin")
+  lastChangedBy String?
+}

@@ -1,26 +1,41 @@
 import { Request, Response } from 'express';
-import { Category } from '../models/category.model';
-import { ICategory } from '../types/category.interface';
-import { constants } from './constants';
-const { handleError, handleBadRequest, handleSuccess } = constants;
+import { ICategory } from '../interfaces/category.interface';
+import { handleBadRequest, handleError, handleSuccess, prisma } from '../utils/utils';
 
-const CategoryComtroller = {
+export const CategoryController = {
   get: async (req: Request, res: Response) => {
     try {
       const { id, name } = req.query;
 
       if (id && id !== "") {
-        const result = await Category.findById(id);
-        if (result) return handleSuccess(res, result, "category found", 200, null);
-        return handleBadRequest(res, 400, "category not found");
+
+        const result = await prisma.categories.findFirst({
+          where: { id: Number(id) }
+        });
+
+        if (result) return handleSuccess({ res, result });
+
+        return handleBadRequest({ res, message: "category not found" });
+
       } else if (name && name !== "") {
-        const result = await Category.find({ name });
-        if (result.length) return handleSuccess(res, result, "category found", 200, null);
-        return handleBadRequest(res, 400, "category not found");
+
+        const result = await prisma.categories.findMany({
+          where: {
+            name: String(name)
+          }
+        });
+
+        if (result.length) return handleSuccess({ res, result });
+
+        return handleBadRequest({ res, message: "category not found" });
+
       } else {
-        const result = await Category.find();
-        if (result.length) return handleSuccess(res, result, "category found", 200, null);
-        return handleBadRequest(res, 400, "category not found");
+
+        const result = await prisma.categories.findMany();
+
+        if (result.length) return handleSuccess({ res, result, message: "category found" });
+
+        return handleBadRequest({ res, message: "category not found" });
       };
     } catch (error) {
       handleError(res, error);
@@ -31,17 +46,19 @@ const CategoryComtroller = {
       const body: ICategory = req.body;
       const { name, description, image }: ICategory = body;
 
-      if (!name) return handleBadRequest(res, 400, "name not in params");
+      if (!name) return handleBadRequest({ res, message: "name not in params" });
 
-      const schedule = new Category({
-        name: name.toLowerCase(),
-        description: description?.toLowerCase() || name.toLowerCase(),
-        image
+      const schedule = prisma.categories.create({
+        data: {
+          name: name.toLowerCase(),
+          description: description?.toLowerCase() || name.toLowerCase(),
+          image
+        }
       });
-      await schedule.save();
+
       if (schedule)
-        return handleSuccess(res, schedule, "schedule created", 201, null);
-      return handleBadRequest(res, 500, "unexpected error");
+        return handleSuccess({ res, result: schedule });
+      return handleBadRequest({ res, message: "unexpected error" });
     } catch (error) {
       return handleError(res, error);
     }
@@ -50,11 +67,17 @@ const CategoryComtroller = {
     try {
       const { id } = req.query;
       if (!id || !id.length) {
-        return handleBadRequest(res, 400, "no id in req params");
+        return handleBadRequest({ res, message: "no id in req params" });
       }
-      const result = await Category.deleteOne({ _id: id });
-      if (result.deletedCount) return handleSuccess(res, undefined, result.deletedCount + " category deleted", 200, undefined);
-      handleBadRequest(res, 400, "unexpected error, delete failed");
+      const result = await prisma.categories.update({
+        where: { id: Number(id) },
+        data: { status: false }
+      });
+
+      if (result)
+        return handleSuccess({ res });
+
+      return handleBadRequest({ res, message: "unexpected error, delete failed" });
     } catch (error) {
       return handleError(res, error);
     }
@@ -62,15 +85,17 @@ const CategoryComtroller = {
   update: async (req: Request, res: Response) => {
     try {
       const { id, ...restData } = req.body;
-      if (!id || !restData) return handleBadRequest(res, 400, "req body incomplete");
+      if (!id || !restData) return handleBadRequest({ res, message: "req body incomplete" });
 
-      const result = await Category.updateOne({ _id: id }, restData);
-      if (result.modifiedCount) return handleSuccess(res, undefined, result.modifiedCount + " category modified", 200, undefined);
-      handleBadRequest(res, 400, "unexpected error, modification failed");
+      const result = await prisma.categories.update({
+        where: { id: Number(id) },
+        data: { ...restData }
+      });
+
+      if (result) return handleSuccess({ res, result });
+      return handleBadRequest({ res, message: "unexpected error, modification failed" });
     } catch (error) {
-      handleError(res, error);
+      return handleError(res, error);
     }
   }
 }
-
-export default CategoryComtroller;

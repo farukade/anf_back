@@ -2,7 +2,7 @@ import { ObjectId } from "mongoose";
 
 export interface INews {
   subject: string;
-  category: ObjectId;
+  categoryId: number;
   isTopStory?: boolean;
   isEditorsPick?: boolean;
   isFeatured?: boolean;
