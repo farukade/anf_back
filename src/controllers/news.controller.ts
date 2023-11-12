@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { INews } from '../interfaces/news.interface';
-import { getPagination, handleBadRequest, handleError, handleSuccess, prisma } from '../utils/utils';
+import { getMeta, getPagination, handleBadRequest, handleError, handleSuccess, prisma } from '../utils/utils';
 
 export const NewsController = {
   get: async (req: Request, res: Response) => {
@@ -11,7 +11,10 @@ export const NewsController = {
       if (id && id !== "") {
 
         const result = await prisma.news.findUnique({
-          where: { id: Number(id) }
+          where: { id: Number(id) },
+          include: {
+            category: true
+          }
         });
 
         if (result)
@@ -24,12 +27,28 @@ export const NewsController = {
           where: {
             categoryId: Number(categoryId)
           },
+          include: {
+            category: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
           take,
           skip
         });
 
+        const aggregation = await prisma.news.aggregate({
+          _count: {
+            id: true
+          },
+          where: {
+            categoryId: Number(categoryId)
+          },
+        });
+
+        const paging = getMeta(req.query, aggregation._count.id);
         if (result.length)
-          return handleSuccess({ res, result });
+          return handleSuccess({ res, result, paging });
         return handleBadRequest({ res, message: "contents not found" });
 
       } else if (
@@ -56,22 +75,50 @@ export const NewsController = {
 
         const result = await prisma.news.findMany({
           where: query,
+          include: {
+            category: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
           skip,
           take
         });
 
+        const aggregation = await prisma.news.aggregate({
+          _count: {
+            id: true
+          },
+          where: query,
+        });
+
+        const paging = getMeta(req.query, aggregation._count.id);
         if (result.length)
-          return handleSuccess({ res, result });
+          return handleSuccess({ res, result, paging });
 
         return handleBadRequest({ res, message: "contents not found" });
       } else {
         const result = await prisma.news.findMany({
+          include: {
+            category: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
           take,
           skip
         });
 
+        const aggregation = await prisma.news.aggregate({
+          _count: {
+            id: true
+          },
+        });
+
+        const paging = getMeta(req.query, aggregation._count.id);
+
         if (result.length)
-          return handleSuccess({ res, result });
+          return handleSuccess({ res, result, paging });
         return handleBadRequest({ res, message: "contents not found" });
       }
     } catch (error) {

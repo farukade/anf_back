@@ -2,7 +2,7 @@ import { pbkdf2Sync, randomBytes } from 'crypto';
 import { Request, Response } from 'express';
 import { ILogin } from '../interfaces/login.interface';
 import { IUser } from '../interfaces/user.interface';
-import { handleBadRequest, handleError, handleSuccess, prisma } from '../utils/utils';
+import { getMeta, handleBadRequest, handleError, handleSuccess, prisma } from '../utils/utils';
 import { IResult } from '../interfaces/result.interface';
 import { encodeToken } from '../utils/middlewares';
 
@@ -22,10 +22,25 @@ export const UserController = {
         return handleBadRequest({ res, message: "user not found" });
       } else {
 
-        const result = await prisma.users.findMany();
+        const result = await prisma.users.findMany({
+          orderBy: {
+            createdAt: 'desc'
+          },
+        });
+
+        const aggregations = await prisma.users.aggregate({
+          _count: {
+            id: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+        });
+
+        const paging = getMeta(req.query, aggregations._count.id);
 
         if (result.length)
-          return handleSuccess({ res, result });
+          return handleSuccess({ res, result, paging });
         return handleBadRequest({ res, message: "users not found" });
       };
     } catch (error) {

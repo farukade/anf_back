@@ -48,7 +48,7 @@ export const CategoryController = {
 
       if (!name) return handleBadRequest({ res, message: "name not in params" });
 
-      const schedule = prisma.categories.create({
+      const categories = await prisma.categories.create({
         data: {
           name: name.toLowerCase(),
           description: description?.toLowerCase() || name.toLowerCase(),
@@ -56,8 +56,8 @@ export const CategoryController = {
         }
       });
 
-      if (schedule)
-        return handleSuccess({ res, result: schedule });
+      if (categories)
+        return handleSuccess({ res, result: categories });
       return handleBadRequest({ res, message: "unexpected error" });
     } catch (error) {
       return handleError(res, error);
