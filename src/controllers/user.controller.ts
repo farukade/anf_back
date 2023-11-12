@@ -136,7 +136,6 @@ export const UserController = {
   },
   verifyToken: async (req: Request, res: Response) => {
     try {
-      console.log(req.headers);
       return handleSuccess({ res })
     } catch (error) {
       return handleError(res, error);
