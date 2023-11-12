@@ -15,7 +15,7 @@ config();
 const secret: string = process.env.JWT_SECRET || '';
 const logSecret = process.env.LOG_SECRET;
 
-export const authorize = (requiredPermissions: string[]) => {
+export const authorize = (requiredPermissions?: string[]) => {
   return [
     expressjwt({ secret, algorithms: ["HS256"] }), (req: Request, res: Response, next: NextFunction) => {
       const token = getToken(req);

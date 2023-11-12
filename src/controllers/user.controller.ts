@@ -4,6 +4,7 @@ import { ILogin } from '../interfaces/login.interface';
 import { IUser } from '../interfaces/user.interface';
 import { handleBadRequest, handleError, handleSuccess, prisma } from '../utils/utils';
 import { IResult } from '../interfaces/result.interface';
+import { encodeToken } from '../utils/middlewares';
 
 export const UserController = {
   get: async (req: Request, res: Response) => {
@@ -82,8 +83,9 @@ export const UserController = {
 
       let rs = await isValidPassword(username.toLowerCase(), password);
 
+      const token = encodeToken(rs.data);
       if (rs.success)
-        return handleSuccess({ res, result: rs?.data, message: rs?.message });
+        return handleSuccess({ res, result: { ...rs?.data, token }, message: rs?.message });
 
       return handleBadRequest({ res, message: rs.message || "unexpected error" });
     } catch (error) {
@@ -131,6 +133,14 @@ export const UserController = {
     } catch (error) {
       handleError(res, error);
     }
+  },
+  verifyToken: async (req: Request, res: Response) => {
+    try {
+      console.log(req.headers);
+      return handleSuccess({ res })
+    } catch (error) {
+      return handleError(res, error);
+    }
   }
 }
 
@@ -143,7 +153,8 @@ const isValidPassword = async (username: string, password: string): Promise<IRes
 
   var hash = pbkdf2Sync(password, user.salt, 1000, 64, `sha512`).toString(`hex`);
   if (user.password === hash) {
-    return { success: true, message: "password verification success", data: user }
+    const { password, salt, ...restUser } = user;
+    return { success: true, message: "password verification success", data: restUser }
   };
   return { success: false, message: "password verification failed" }
 }

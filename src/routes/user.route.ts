@@ -1,12 +1,14 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user.controller";
+import { authorize } from "../utils/middlewares";
 
 const router = Router();
 
-router.get('/', UserController.get);
-router.post('/', UserController.create);
+router.get('/', authorize([""]), UserController.get);
+router.post('/', authorize([""]), UserController.create);
 router.post('/login', UserController.login);
-router.delete('/', UserController.delete);
-router.patch('/login', UserController.update);
+router.post('/verify/login', authorize([""]), UserController.verifyToken);
+router.delete('/', authorize([""]), UserController.delete);
+router.patch('/', UserController.update);
 
 export default router;
