@@ -49,5 +49,8 @@
 	"prisma": {
 		"seed": "ts-node src/prisma/seed.ts",
 		"schema": "src/prisma/schema.prisma"
+	},
+	"engines": {
+		"node": "18.17.1"
 	}
 }
