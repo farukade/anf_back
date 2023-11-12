@@ -6,8 +6,8 @@
 	"type": "commonjs",
 	"scripts": {
 		"build": "tsc",
-		"start": "node dist/index.js",
-		"start:prod": "yarn build && node dist/src/server.js",
+		"start": "node dist/server.js",
+		"start:prod": "yarn build && node dist/server.js",
 		"start:dev": "yarn build && nodemon ./src/server.ts",
 		"db:format": "yarn prisma format",
 		"db:migrate:new": "yarn prisma migrate dev --name",
