@@ -216,3 +216,13 @@ Invalid `prisma.news.findUnique()` invocation in
        })
 
 Argument `id` is missing.
+[22:54:13 19-11-2023] [31merror[39m: 
+Invalid `prisma.users.findUnique()` invocation in
+/Users/farukadekunle/developments/anf_back/src/controllers/user.controller.ts:62:43
+
+  59 if (username?.length < 3 || password?.length < 5)
+  60   return handleBadRequest({ res, message: "username | password not of required length" });
+  61 
+→ 62 const existing = await prisma.users.findUnique(
+The table `public.users` does not exist in the current database.
+[22:56:00 19-11-2023] [31merror[39m: admin@email.com already registered
