@@ -1,5 +1,5 @@
 import { expressjwt } from 'express-jwt';
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { IAuthUser } from '../interfaces/auth.interface';
 import { verify, sign } from 'jsonwebtoken';
 import { config } from 'dotenv';
@@ -110,6 +110,9 @@ export const newStorage = () => {
   });
 }
 
-const uploadFile = multer({ storage: newStorage(), limits: { fileSize: 10 * 1024 * 1024 } }).any();
+const uploadFile = multer({
+  storage: newStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }
+}).any();
 
-export const upload = promisify(uploadFile);
+export const upload: RequestHandler = promisify(uploadFile);

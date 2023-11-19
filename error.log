@@ -199,3 +199,20 @@ Invalid `prisma.news.create()` invocation in
   94 
 → 95 const result = await prisma.news.create(
 Foreign key constraint failed on the field: `news_categoryId_fkey (index)`
+[22:25:28 19-11-2023] [31merror[39m: 
+Invalid `prisma.news.findUnique()` invocation in
+/Users/farukadekunle/developments/anf_back/src/controllers/news.controller.ts:13:42
+
+  10 
+  11 if (id && id !== "") {
+  12 
+→ 13   const result = await prisma.news.findUnique({
+         where: {
+       +   id: Int
+         },
+         include: {
+           category: true
+         }
+       })
+
+Argument `id` is missing.

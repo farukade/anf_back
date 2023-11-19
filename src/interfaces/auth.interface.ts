@@ -10,5 +10,6 @@ export interface IAuthUser {
 declare module 'express' {
   interface Request {
     user: IAuthUser;
+    files?: any;
   }
 }
